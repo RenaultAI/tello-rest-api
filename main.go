@@ -32,6 +32,9 @@ func main() {
 				errors <- drone.TakeOff()
 
 			case land:
+				log.Println("Command land...")
+				errors <- drone.Land()
+
 			default:
 				errors <- fmt.Errorf("Unrecognized command %v", cmd)
 			}
@@ -69,15 +72,14 @@ func main() {
 	})
 
 	r.POST("/land", func(c *gin.Context) {
-		log.Println("landing...")
-		if err := drone.Land(); err != nil {
+		commands <- land
+		if err := <-errors; err != nil {
 			log.Printf("Error landing: %s\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed",
 			})
 			return
 		}
-
 		c.JSON(200, gin.H{
 			"message": "success",
 		})
